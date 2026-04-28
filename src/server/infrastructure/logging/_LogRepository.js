@@ -2,23 +2,22 @@
 
 /**
  * LogRepository
- * Single responsibility: Menyimpan entri log ke dalam Google Sheets secara aman.
- * Menggunakan SheetDriver dan WriteGate secara internal.
+ * Single responsibility: Menyimpan entri log ke medium penyimpanan.
+ * (100% Decoupled: Driver dan Gate di-inject dari luar)
  */
 class LogRepository {
-  static write(logEntry) {
-    // Ambil ID Sheet khusus log dari environment variables (bisa dipisah atau gabung DB utama)
-    const logSheetId = EnvConfig.get('LOG_SHEET_ID'); 
-    
-    // Kalau nggak di-setting, abaikan aja nulis log ke sheet (biar dev env ga numpuk)
-    if (!logSheetId) return;
+  constructor(driver, writeGate) {
+    this.driver = driver;         // Abstraksi DB (SheetDriver)
+    this.writeGate = writeGate;   // Abstraksi Concurrency (WriteGate)
+  }
+
+  write(logEntry) {
+    // Kalau driver ga di-inject (misal fitur log lagi dimatiin), skip aja
+    if (!this.driver) return; 
 
     try {
-      const driver = new SheetDriver(logSheetId, 'SYS_LOGS');
-      
-      // Menggunakan WriteGate agar penulisan log tidak tabrakan antar user
-      WriteGate.execute(() => {
-        driver.append([
+      this.writeGate.execute(() => {
+        this.driver.append([
           logEntry.id,
           logEntry.timestamp,
           logEntry.severity,
@@ -30,8 +29,7 @@ class LogRepository {
         ]);
       });
     } catch (e) {
-      // Fallback ke console bawaan Google jika gagal nulis ke Sheet
-      console.error('Gagal menulis log ke Sheet:', e);
+      console.error('Gagal menulis log ke sistem:', e);
     }
   }
 }

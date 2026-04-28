@@ -1,10 +1,19 @@
 // src/server/infrastructure/logging/_Logger.js
 
 /**
- * Logger
- * Single responsibility: Mencatat aktivitas, error, dan audit trail ke dalam sistem log.
+ * Logger (Facade)
+ * Single responsibility: Mencatat aktivitas, error, dan audit trail.
  */
 class Logger {
+  static _repo = null;
+
+  /**
+   * Inject repository dari Kernel/Container saat aplikasi booting.
+   */
+  static setRepository(repo) {
+    this._repo = repo;
+  }
+
   static _buildEntry(severity, message, context, action = 'SYSTEM_PROCESS', actor = 'SYSTEM', stack = '-') {
     return {
       id: Utilities.getUuid(),
@@ -19,28 +28,25 @@ class Logger {
   }
 
   static debug(message, context = {}) {
-    if (EnvConfig.get('APP_ENV') !== 'dev') return; // Cuma nyatet debug di dev
-    LogRepository.write(this._buildEntry('DEBUG', message, context));
+    if (EnvConfig.get('APP_ENV') !== 'dev') return;
+    if (this._repo) this._repo.write(this._buildEntry('DEBUG', message, context));
   }
 
   static info(message, context = {}) {
-    LogRepository.write(this._buildEntry('INFO', message, context));
+    if (this._repo) this._repo.write(this._buildEntry('INFO', message, context));
   }
 
   static warn(message, context = {}) {
-    LogRepository.write(this._buildEntry('WARN', message, context));
+    if (this._repo) this._repo.write(this._buildEntry('WARN', message, context));
   }
 
   static error(message, context = {}, errorObj = null) {
     const stack = errorObj instanceof Error ? errorObj.stack : '-';
-    LogRepository.write(this._buildEntry('ERROR', message, context, 'ERROR_THROWN', 'SYSTEM', stack));
+    if (this._repo) this._repo.write(this._buildEntry('ERROR', message, context, 'ERROR_THROWN', 'SYSTEM', stack));
   }
 
-  /**
-   * Audit Trail khusus untuk mencatat perubahan data.
-   */
   static audit(actor, action, entity, entityId, before, after) {
     const context = { entity, entityId, before, after };
-    LogRepository.write(this._buildEntry('AUDIT', `Perubahan pada ${entity}`, context, action, actor));
+    if (this._repo) this._repo.write(this._buildEntry('AUDIT', `Perubahan pada ${entity}`, context, action, actor));
   }
 }

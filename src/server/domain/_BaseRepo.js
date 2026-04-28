@@ -3,19 +3,18 @@
 /**
  * BaseRepo
  * Single responsibility: Fondasi dasar untuk semua Repository.
- * Menjembatani domain model dengan SheetDriver dan QueryBuilder.
+ * (100% Decoupled: Tidak melakukan instansiasi koneksi DB sendiri)
  */
 class BaseRepo {
-  constructor(spreadsheetId, sheetName, tableKeys, startRow = 2) {
-    this.driver = new SheetDriver(spreadsheetId, sheetName);
+  constructor(driver, tableKeys, startRow = 2) {
+    if (!driver) throw new AppError('Database driver must be injected', 'SYS_ERROR', 500);
+    this.driver = driver;
     this.tableKeys = tableKeys;
     this.startRow = startRow;
   }
 
-  /**
-   * Memulai fluent query builder
-   */
   query() {
+    // QueryBuilder masih aman di sini karena dia utility pemroses data bawaan dari driver
     return new QueryBuilder(this.driver, this.tableKeys);
   }
 
@@ -39,7 +38,6 @@ class BaseRepo {
     data.createdAt = data.createdAt || now;
     data.updatedAt = data.updatedAt || now;
 
-    // Map object to array based on tableKeys
     const rowData = this.tableKeys.map(key => data[key] !== undefined ? data[key] : '');
     this.driver.append(rowData);
     
