@@ -23,4 +23,4 @@ class SpreadsheetUtils {
   static a1Notation(row, col) {
     return `${this.columnIndexToLetter(col)}${row}`;
   }
-}P
+}

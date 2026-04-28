@@ -6,7 +6,7 @@
  * Membantu decoupling kode. Contoh: Service nyimpan data -> Emit Event -> Listener ngirim Email.
  */
 class EventBus {
-  static _listeners = {};
+
 
   /**
    * Mendaftarkan listener ke sebuah event.
@@ -47,4 +47,7 @@ class EventBus {
       }
     }
   }
+
+
+// Static properties moved outside class
 }

@@ -5,9 +5,9 @@
  * Single responsibility: Menerima request dari GAS, memproses via Pipeline, dan memanggil Service.
  */
 class Router {
-  static _getRoutes = new Map();
-  static _postRoutes = new Map();
-  static _pages = new Map();
+
+
+
 
   // --- REGISTRATION ---
 
@@ -95,5 +95,5 @@ class Router {
     // Asumsi route.method adalah nama fungsi di service (cth: 'getPaginatedData')
     const methodToCall = route.method || 'execute';
     return service[methodToCall](context.payload || context.request);
-  }
-}
+  }}
+  

@@ -6,8 +6,8 @@
  * Mengelola instansiasi service/repo secara terpusat agar tidak tight-coupling.
  */
 class Container {
-  static _factories = new Map();
-  static _instances = new Map();
+
+
 
   /**
    * Mendaftarkan cara membuat sebuah service
@@ -42,4 +42,5 @@ class Container {
   static clear() {
     this._instances.clear();
   }
+
 }

@@ -7,7 +7,7 @@
  * Menyiapkan environment, dependencies, dan mengembalikan Router untuk dieksekusi.
  */
 class Kernel {
-  static _booted = false;
+
 
   static boot() {
     if (this._booted) return Router;
@@ -24,4 +24,5 @@ class Kernel {
   static env() {
     return EnvConfig.get('APP_ENV', 'dev');
   }
+
 }

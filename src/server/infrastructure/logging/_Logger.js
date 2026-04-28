@@ -5,7 +5,7 @@
  * Single responsibility: Mencatat aktivitas, error, dan audit trail.
  */
 class Logger {
-  static _repo = null;
+
 
   /**
    * Inject repository dari Kernel/Container saat aplikasi booting.
@@ -49,4 +49,7 @@ class Logger {
     const context = { entity, entityId, before, after };
     if (this._repo) this._repo.write(this._buildEntry('AUDIT', `Perubahan pada ${entity}`, context, action, actor));
   }
+
+
+// Static properties moved outside class
 }
