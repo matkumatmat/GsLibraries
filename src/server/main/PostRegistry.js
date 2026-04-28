@@ -12,4 +12,25 @@ const PostRegistry = {
   //   method: 'create',
   //   roles: ['ADMIN'] // Hanya admin yang boleh eksekusi
   // }
+
+  'createSupplier': {
+    factory: () => {
+      const driver = new SheetDriver(EnvConfig.get('SHEET_ID_SUPPLIER'), 'MASTER_SUPPLIER');
+      const keys = ['id', 'nama', 'status', 'createdAt', 'updatedAt'];
+      const repo = new SupplierRepo(driver, keys, 2);
+      return new SupplierService(repo);
+    },
+    method: 'create',
+    roles: ['ADMIN']
+  },
+  'updateSupplier': {
+    factory: () => {
+      const driver = new SheetDriver(EnvConfig.get('SHEET_ID_SUPPLIER'), 'MASTER_SUPPLIER');
+      const keys = ['id', 'nama', 'status', 'createdAt', 'updatedAt'];
+      const repo = new SupplierRepo(driver, keys, 2);
+      return new SupplierService(repo);
+    },
+    method: 'update',
+    roles: ['ADMIN']
+  },
 };

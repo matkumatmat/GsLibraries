@@ -12,4 +12,15 @@ const DomainRegistry = {
   //   cacheGroup: 'USERS',
   //   method: 'getPaginatedData'
   // }
+
+  'getSuppliers': {
+    factory: () => {
+      const driver = new SheetDriver(EnvConfig.get('SHEET_ID_SUPPLIER'), 'MASTER_SUPPLIER');
+      const keys = ['id', 'nama', 'status', 'createdAt', 'updatedAt'];
+      const repo = new SupplierRepo(driver, keys, 2);
+      return new SupplierService(repo);
+    },
+    cacheGroup: 'MASTER_SUPPLIER',
+    method: 'getPaginatedData'
+  },
 };
