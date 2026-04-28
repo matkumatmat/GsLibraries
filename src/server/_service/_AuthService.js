@@ -24,10 +24,10 @@ class AuthService {
    * @param {Object} userData - Data user yang akan disimpan di session (misal: {email, role})
    */
   static createSession(userData) {
-    const token = Utilities.getUuid(); // Framework bawaan GAS
+    const token = Utilities.getUuid(); 
     
-    // Simpan ke cache, gunakan CacheStrategy yang sudah dibuat di Phase 3
-    CacheManager.set('AUTH_SESSIONS', token, JSON.stringify(userData), CacheStrategy.MAX);
+    // FIX: Hapus JSON.stringify()
+    CacheManager.set('AUTH_SESSIONS', token, userData, CacheStrategy.MAX);
     
     return token;
   }
@@ -48,6 +48,6 @@ class AuthService {
     if (!token) return null;
     
     const sessionStr = CacheManager.get('AUTH_SESSIONS', token);
-    return sessionStr ? JSON.parse(sessionStr) : null;
+    return sessionStr ? sessionStr : null;
   }
 }

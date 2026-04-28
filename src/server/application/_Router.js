@@ -75,22 +75,25 @@ class Router {
   }
 
   static _executeRoute(route, requestData) {
-    // Siapkan context untuk middleware
     const context = {
       request: requestData,
       response: null,
       user: null,
       isRejected: false,
       error: null,
-      requiredRoles: route.roles || []
+      requiredRoles: route.roles || [],
+      action: requestData.action // Pastikan action ada di context
     };
 
-    // Jalankan Pipeline (Middleware)
-    const pipeline = new Pipeline(route.middlewares);
+    // Fix Bug #1: Pastikan Pipeline menerima Class Reference (berjalan lancar)
+    const pipeline = new Pipeline(route.middlewares || []);
     pipeline.runOrThrow(context);
 
-    // Resolve Service dari Container & eksekusi
-    const service = Container.make(route.handlerKey);
-    return service.execute(context.request);
+    // Fix Bug #6: Gunakan factory() dari route, fallback ke Container.make
+    const service = route.factory ? route.factory() : Container.make(route.handlerKey);
+    
+    // Asumsi route.method adalah nama fungsi di service (cth: 'getPaginatedData')
+    const methodToCall = route.method || 'execute';
+    return service[methodToCall](context.payload || context.request);
   }
 }

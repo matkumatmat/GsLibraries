@@ -12,5 +12,13 @@
   "jsonExtensions": [
     ".json"
   ],
-  "filePushOrder": []
+  "filePushOrder": [
+    "src/server/_AppError.js",
+    "src/server/_Result.js",
+    "src/server/_EnvConfig.js",
+    "src/server/application/_Pipeline.js",
+    "src/server/application/_Router.js",
+    "src/server/application/_Container.js",
+    "src/server/application/_Kernel.js"
+  ]
 }

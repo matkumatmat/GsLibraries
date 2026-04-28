@@ -34,11 +34,10 @@ class CacheManager {
     const propKey = `CACHE_VER_${group.toUpperCase()}`;
     const currentVersion = parseInt(EnvConfig.get(propKey, '1'));
     
-    // Tulis langsung ke PropertiesService untuk bump versi
     PropertiesService.getScriptProperties().setProperty(propKey, (currentVersion + 1).toString());
     
-    // Reset cache EnvConfig agar membaca properties terbaru
-    EnvConfig._config = null; 
+    // FIX: Gunakan method publik dari EnvConfig (tambahkan method reload ini ke _EnvConfig.js)
+    EnvConfig.reload(); 
   }
 
   /**
