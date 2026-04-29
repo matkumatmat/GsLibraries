@@ -7,9 +7,6 @@ class CacheStrategy {
   static get LONG()       { return 10800; }
   static get MAX()        { return 21600; }
 
-  // Static map untuk custom rules dari project
-  static _customRules = new Map();
-
   /**
    * Mengizinkan project spesifik untuk mendaftarkan aturan TTL sendiri di main.js
    */
@@ -34,4 +31,7 @@ class CacheStrategy {
       default: return this.MEDIUM;
     }
   }
-}2
+}
+
+// FIX BUGS GAS V8: Inisialisasi static property mutable harus di luar class
+CacheStrategy._customRules = new Map();
