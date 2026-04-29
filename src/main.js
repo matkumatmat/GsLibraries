@@ -6,9 +6,40 @@
 function bootApp() {
   // Kernel.boot akan otomatis membaca PostRegistry (karena GAS menggabungkan semua scope)
   const router = Kernel.boot([
-    // Fungsi ini mendaftarkan semua listener dari EventRegistry ke EventBus
+    // 1. Dependency Injection setup
     () => {
-      if (typeof EventRegistry !== 'undefined') {
+      if (typeof Container !== 'undefined') {
+        Container.singleton('DriveAdapter', () => new DriveAdapter());
+        Container.singleton('SpreadsheetLogAdapter', () => new SpreadsheetLogAdapter());
+
+        Container.singleton('FileManagementService', () => {
+          const driveRepo = Container.make('DriveAdapter');
+          const logRepo = Container.make('SpreadsheetLogAdapter');
+          return new FileManagementService(driveRepo, logRepo);
+        });
+
+        Container.singleton('FileController', () => {
+          const service = Container.make('FileManagementService');
+          return new FileController(service);
+        });
+      }
+    },
+
+    // 2. Routing Setup
+    () => {
+      if (typeof Router !== 'undefined') {
+        Router.post('upload', 'FileController', [], []);
+        // Kita menggunakan factory custom untuk method controller tertentu
+        Router._postRoutes.set('delete', { factory: () => Container.make('FileController'), method: 'delete' });
+
+        // Router default GET method='execute', jadi kita inject custom factory untuk list()
+        Router._getRoutes.set('list', { factory: () => Container.make('FileController'), method: 'list' });
+      }
+    },
+
+    // 3. Event Listener setup (jika ada)
+    () => {
+      if (typeof EventRegistry !== 'undefined' && typeof EventBus !== 'undefined') {
         for (const [eventName, listeners] of Object.entries(EventRegistry)) {
           listeners.forEach(ListenerClass => EventBus.on(eventName, ListenerClass));
         }
@@ -25,7 +56,7 @@ function bootApp() {
 function doGet(e) {
   try {
     const router = bootApp();
-    return router.handleGet(e);
+    return router.dispatchGet(e);
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ error: error.message }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -35,7 +66,7 @@ function doGet(e) {
 function doPost(e) {
   try {
     const router = bootApp();
-    return router.handlePost(e);
+    return router.dispatchPost(e);
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ error: error.message }))
       .setMimeType(ContentService.MimeType.JSON);
