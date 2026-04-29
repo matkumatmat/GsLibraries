@@ -11,7 +11,7 @@ class DriveStructureManager {
     // Mulai rekursi dari depth 0
     treeString += this._buildTree(rootFolder, "", 0, maxDepth, showFiles);
     
-    return treeString;
+    return treeString; // <--- SUDAH DIPERBAIKI
   }
 
   static _buildTree(folder, prefix, currentDepth, maxDepth, showFiles) {
