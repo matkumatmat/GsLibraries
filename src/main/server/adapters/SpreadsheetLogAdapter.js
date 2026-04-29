@@ -6,9 +6,8 @@
  * Menyimpan data log di dalam Spreadsheet yang diletakkan di dalam target folder Drive.
  * Jika file Spreadsheet belum ada, maka akan otomatis dibuat (Initial Migration).
  */
-class SpreadsheetLogAdapter extends FileLogRepositoryPort {
+class SpreadsheetLogAdapter {
   constructor() {
-    super();
     this.targetFolderId = AppConfig.get('workspace.drive.targetFolderId');
     this.logFileName = AppConfig.get('workspace.spreadsheet.logFileName', 'Application_File_Logs');
     this.spreadsheetId = this._initSpreadsheet();
