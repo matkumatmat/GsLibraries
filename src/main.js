@@ -1,43 +1,48 @@
-// src/main/main.js
+// src/main.js
 
-// ==========================================
-// 1. BOOTSTRAPPING (Menghidupkan Mesin)
-// ==========================================
 function bootApp() {
-  // Kernel.boot akan otomatis membaca PostRegistry (karena GAS menggabungkan semua scope)
   const router = Kernel.boot([
     // 1. Dependency Injection setup
     () => {
       if (typeof Container !== 'undefined') {
-        Container.singleton('DriveAdapter', () => new DriveAdapter());
-        Container.singleton('SpreadsheetLogAdapter', () => new SpreadsheetLogAdapter());
-
-        Container.singleton('FileManagementService', () => {
+        Container.bind('DriveAdapter', () => new DriveAdapter());
+        Container.bind('SpreadsheetLogAdapter', () => new SpreadsheetLogAdapter());
+        
+        Container.bind('FileManagementService', () => {
           const driveRepo = Container.make('DriveAdapter');
           const logRepo = Container.make('SpreadsheetLogAdapter');
           return new FileManagementService(driveRepo, logRepo);
         });
 
-        Container.singleton('FileController', () => {
+        // Karena _Router Anda butuh class yang punya fungsi execute(),
+        // kita pecah controllernya menjadi 3 class mungil
+        Container.bind('UploadController', () => {
           const service = Container.make('FileManagementService');
-          return new FileController(service);
+          return { execute: (payload) => (new FileController(service)).upload(payload) };
+        });
+
+        Container.bind('DeleteController', () => {
+          const service = Container.make('FileManagementService');
+          return { execute: (payload) => (new FileController(service)).delete(payload) };
+        });
+
+        Container.bind('ListController', () => {
+          const service = Container.make('FileManagementService');
+          return { execute: () => (new FileController(service)).list() };
         });
       }
     },
-
-    // 2. Routing Setup
+    
+    // 2. Routing Setup (Menggunakan fungsi native dari _Router, jangan di-bypass)
     () => {
       if (typeof Router !== 'undefined') {
-        Router.post('upload', 'FileController', [], []);
-        // Kita menggunakan factory custom untuk method controller tertentu
-        Router._postRoutes.set('delete', { factory: () => Container.make('FileController'), method: 'delete' });
-
-        // Router default GET method='execute', jadi kita inject custom factory untuk list()
-        Router._getRoutes.set('list', { factory: () => Container.make('FileController'), method: 'list' });
+        Router.post('upload', 'UploadController', [], []);
+        Router.post('delete', 'DeleteController', [], []);
+        Router.get('list', 'ListController', []);
       }
     },
 
-    // 3. Event Listener setup (jika ada)
+    // 3. Event Listener setup
     () => {
       if (typeof EventRegistry !== 'undefined' && typeof EventBus !== 'undefined') {
         for (const [eventName, listeners] of Object.entries(EventRegistry)) {
@@ -73,14 +78,10 @@ function doPost(e) {
   }
 }
 
-// ==========================================
-// 3. BACKGROUND JOBS HANDLER
-// ==========================================
 function jobEntryTrigger() {
   const props = PropertiesService.getScriptProperties();
   const activeJobName = props.getProperty(JobRunner.ACTIVE_JOB_KEY);
   
-  // (Nanti buat JobRegistry di folder ports/ kalau kamu butuh fitur Background Job)
   if (activeJobName && typeof JobRegistry !== 'undefined' && JobRegistry[activeJobName]) {
     JobRunner.execute(JobRegistry[activeJobName]);
   }

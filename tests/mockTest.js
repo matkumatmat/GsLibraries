@@ -83,7 +83,7 @@ const context = vm.createContext(global);
 
 // Jalankan file-file secara berurutan dalam context yang sama
 const files = [
-  './src/main/server/config/AppConfig.js',
+  // './src/main/server/config/AppConfig.js',
   './src/main/server/ports/DriveFileRepositoryPort.js',
   './src/main/server/ports/FileLogRepositoryPort.js',
   './src/main/server/core/FileManagementService.js',

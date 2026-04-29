@@ -2,43 +2,33 @@
 
 /**
  * SpreadsheetLogAdapter
- * Mengimplementasikan FileLogRepositoryPort.
  * Menyimpan data log di dalam Spreadsheet yang diletakkan di dalam target folder Drive.
- * Jika file Spreadsheet belum ada, maka akan otomatis dibuat (Initial Migration).
  */
 class SpreadsheetLogAdapter {
   constructor() {
-    this.targetFolderId = AppConfig.get('workspace.drive.targetFolderId');
-    this.logFileName = AppConfig.get('workspace.spreadsheet.logFileName', 'Application_File_Logs');
+    this.targetFolderId = ConfigManager.get('DRIVE_TARGET_FOLDER_ID');
+    this.logFileName = ConfigManager.get('DRIVE_LOG_FILE_NAME', 'Application_File_Logs');
     this.spreadsheetId = this._initSpreadsheet();
   }
 
-  /**
-   * Mengecek apakah spreadsheet log sudah ada di folder. Jika belum, buat baru.
-   */
   _initSpreadsheet() {
     if (!this.targetFolderId) throw new Error("Folder ID tidak dikonfigurasi.");
-
-    // Cari file dengan nama logFileName di target folder
+    
     const folder = DriveManager.getFolder(this.targetFolderId);
     const files = folder.searchFiles(`title = '${this.logFileName}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`);
-
+    
     if (files.hasNext()) {
       return files.next().getId();
     } else {
-      // Buat spreadsheet baru
       const ss = SpreadsheetApp.create(this.logFileName);
       const fileId = ss.getId();
-
-      // Setup Header (Migration)
+      
       const sheet = ss.getActiveSheet();
       sheet.setName("Logs");
       sheet.appendRow(["Timestamp", "Action", "File ID", "File Name", "URL", "Size"]);
       sheet.getRange("A1:F1").setFontWeight("bold");
-
-      // Pindahkan ke target folder (karena SpreadsheetApp.create menyimpannya di root)
+      
       DriveManager.moveItem(fileId, this.targetFolderId, true);
-
       return fileId;
     }
   }
@@ -46,8 +36,7 @@ class SpreadsheetLogAdapter {
   logAction(logData) {
     const ss = SpreadsheetApp.openById(this.spreadsheetId);
     const sheet = ss.getSheetByName("Logs") || ss.getActiveSheet();
-
-    // Append row: ["Timestamp", "Action", "File ID", "File Name", "URL", "Size"]
+    
     sheet.appendRow([
       logData.timestamp,
       logData.action,
@@ -62,11 +51,10 @@ class SpreadsheetLogAdapter {
     const ss = SpreadsheetApp.openById(this.spreadsheetId);
     const sheet = ss.getSheetByName("Logs") || ss.getActiveSheet();
     const data = sheet.getDataRange().getValues();
-
-    if (data.length <= 1) return []; // Hanya header
-
+    
+    if (data.length <= 1) return []; 
+    
     const logs = [];
-    // Skip header row
     for (let i = 1; i < data.length; i++) {
       logs.push({
         timestamp: data[i][0],

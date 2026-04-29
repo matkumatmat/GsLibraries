@@ -2,20 +2,17 @@
 
 /**
  * DriveAdapter
- * Mengimplementasikan DriveFileRepositoryPort menggunakan `_DriveManager` bawaan module.
+ * Mengimplementasikan operasi Drive menggunakan `_DriveManager` bawaan module.
  */
 class DriveAdapter {
   constructor() {
-    // Ambil target folder ID dari AppConfig
-    this.targetFolderId = AppConfig.get('workspace.drive.targetFolderId');
+    // Memanggil ConfigManager module
+    this.targetFolderId = ConfigManager.get('DRIVE_TARGET_FOLDER_ID');
   }
 
   upload(fileData) {
-    if (!this.targetFolderId) throw new Error("Folder ID tidak dikonfigurasi di AppConfig.");
-    // `_DriveManager.uploadBase64` butuh format yang tepat (prefix data URI jika ada)
-    // Jika data tidak memiliki prefix, _DriveManager akan menanganinya asalkan diberi argumen yang pas
-    const result = DriveManager.uploadBase64(fileData.base64, fileData.fileName, this.targetFolderId);
-    return result;
+    if (!this.targetFolderId) throw new Error("Folder ID tidak dikonfigurasi.");
+    return DriveManager.uploadBase64(fileData.base64, fileData.fileName, this.targetFolderId);
   }
 
   getFileInfo(fileId) {
@@ -23,7 +20,6 @@ class DriveAdapter {
   }
 
   delete(fileId) {
-    // Trashing file dari drive. Menggunakan isFile = true
     return DriveManager.trashItem(fileId, true);
   }
 
