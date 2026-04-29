@@ -4,9 +4,8 @@
  * DriveAdapter
  * Mengimplementasikan DriveFileRepositoryPort menggunakan `_DriveManager` bawaan module.
  */
-class DriveAdapter extends DriveFileRepositoryPort {
+class DriveAdapter {
   constructor() {
-    super();
     // Ambil target folder ID dari AppConfig
     this.targetFolderId = AppConfig.get('workspace.drive.targetFolderId');
   }
