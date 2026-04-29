@@ -1,45 +1,42 @@
-// src/server/workspace/drive/_DriveStructureManager.js
-
 class DriveStructureManager {
   /**
-   * Mengambil dan memformat isi folder menjadi representasi ASCII Tree.
-   * @param {string} folderId - ID Folder (kosongkan untuk Root Drive)
-   * @returns {string} String representasi tree
+   * @param {string} folderId - null untuk Root Drive
+   * @param {number} maxDepth - 1 untuk liat anak pertama aja, -1 untuk bablas sampai dasar
+   * @param {boolean} showFiles - true untuk nampilin file, false untuk folder doang
    */
-  static getTree(folderId = null) {
+  static getTree(folderId = null, maxDepth = -1, showFiles = true) {
     const rootFolder = folderId ? DriveApp.getFolderById(folderId) : DriveApp.getRootFolder();
-    
-    // Header tree
     let treeString = `📦 ${rootFolder.getName()}\n`;
     
-    // Mulai rekursi
-    treeString += this._buildTree(rootFolder, "");
+    // Mulai rekursi dari depth 0
+    treeString += this._buildTree(rootFolder, "", 0, maxDepth, showFiles);
     
     return treeString;
   }
 
-  /**
-   * Fungsi internal untuk rekursi (Deep Scan)
-   */
-  static _buildTree(folder, prefix) {
+  static _buildTree(folder, prefix, currentDepth, maxDepth, showFiles) {
+    // Kalau udah nyampe batas kedalaman yang diset, stop nyelam!
+    if (maxDepth !== -1 && currentDepth >= maxDepth) return "";
+
     let result = "";
-
-    // Ambil semua folder & file
-    const subFolders = folder.getFolders();
-    const files = folder.getFiles();
-
-    // Gabungkan jadi satu array biar bisa di-sort (Folder duluan, baru file)
     const items = [];
+    
+    // Ambil folder
+    const subFolders = folder.getFolders();
     while (subFolders.hasNext()) items.push({ type: 'folder', entity: subFolders.next() });
-    while (files.hasNext()) items.push({ type: 'file', entity: files.next() });
+    
+    // Ambil file (KALAU diizinkan)
+    if (showFiles) {
+      const files = folder.getFiles();
+      while (files.hasNext()) items.push({ type: 'file', entity: files.next() });
+    }
 
-    // Sorting alfabetis, prioritaskan folder
+    // Sorting
     items.sort((a, b) => {
       if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
       return a.entity.getName().localeCompare(b.entity.getName());
     });
 
-    // Iterasi untuk mencetak garis tree
     for (let i = 0; i < items.length; i++) {
       const isLast = i === items.length - 1;
       const item = items[i];
@@ -49,8 +46,8 @@ class DriveStructureManager {
 
       if (item.type === 'folder') {
         result += `${prefix}${pointer}📁 ${item.entity.getName()}\n`;
-        // Panggil fungsi ini lagi untuk masuk ke dalam sub-folder
-        result += this._buildTree(item.entity, prefix + childPrefix);
+        // Nyelam lebih dalam, currentDepth ditambah 1
+        result += this._buildTree(item.entity, prefix + childPrefix, currentDepth + 1, maxDepth, showFiles);
       } else {
         result += `${prefix}${pointer}📄 ${item.entity.getName()}\n`;
       }

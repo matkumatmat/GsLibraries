@@ -5,21 +5,18 @@
  * Single responsibility: Menerima request dari GAS, memproses via Pipeline, dan memanggil Service.
  */
 class Router {
-
-
-
-
-  // --- REGISTRATION ---
-
   static get(action, handlerKey, middlewares = []) {
+    this._getRoutes = this._getRoutes || new Map();
     this._getRoutes.set(action, { handlerKey, middlewares });
   }
 
   static post(action, handlerKey, middlewares = [], roles = []) {
+    this._postRoutes = this._postRoutes || new Map();
     this._postRoutes.set(action, { handlerKey, middlewares, roles });
   }
 
   static page(slug, templatePath, templateVars = {}) {
+    this._pages = this._pages || new Map();
     this._pages.set(slug, { templatePath, templateVars });
   }
 
@@ -77,23 +74,23 @@ class Router {
   static _executeRoute(route, requestData) {
     const context = {
       request: requestData,
+      payload: requestData.data || requestData, // Ambil payload aslinya
+      route: route,                             // INI PENTING BUAT MIDDLEWARE
       response: null,
       user: null,
       isRejected: false,
       error: null,
       requiredRoles: route.roles || [],
-      action: requestData.action // Pastikan action ada di context
+      action: requestData.action
     };
 
-    // Fix Bug #1: Pastikan Pipeline menerima Class Reference (berjalan lancar)
     const pipeline = new Pipeline(route.middlewares || []);
     pipeline.runOrThrow(context);
 
-    // Fix Bug #6: Gunakan factory() dari route, fallback ke Container.make
     const service = route.factory ? route.factory() : Container.make(route.handlerKey);
-    
-    // Asumsi route.method adalah nama fungsi di service (cth: 'getPaginatedData')
     const methodToCall = route.method || 'execute';
-    return service[methodToCall](context.payload || context.request);
-  }}
-  
+    
+    // Pastikan kita nge-pass payload yang udah disanitasi sama Middleware
+    return service[methodToCall](context.payload);
+  }
+}
